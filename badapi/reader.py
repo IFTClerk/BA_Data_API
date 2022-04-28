@@ -59,9 +59,12 @@ def _parse_ue_passive_stats(df):
     
     # get stat name from first element of second column
     # then use dictionary to map to English
-    stat_name = jp_stat_name_map[df2.iloc[0, 1]]
-    # convert stat values to a list
-    stat_values = df2.iloc[:, 2].tolist()
+    try:
+        stat_name = jp_stat_name_map[df2.iloc[0, 1]]
+        # convert stat values to a list
+        stat_values = df2.iloc[:, 2].tolist()
+    except IndexError:
+        return 
     
     return pd.DataFrame({ "WeaponPassiveStatName": stat_name, "WeaponPassiveStatValue": stat_values })
 
@@ -214,7 +217,7 @@ class BAData:
         # get character bond stats from game data
         bond_df = _get_game_data(self._url_root + "FavorLevelRewardExcelTable.json")
         # process the bond stat and then reset index to get CharacterId back
-        bond_stats_df = bond_df.groupby('CharacterId').apply(_split_bond_stat)        .reset_index().rename(columns={ 'level_1': 'Level' })
+        bond_stats_df = bond_df.groupby('CharacterId').apply(_split_bond_stat).reset_index().rename(columns={ 'level_1': 'Level' })
         
         return bond_stats_df
     
@@ -259,7 +262,7 @@ class BAData:
         """Parses UE passive skill bonuses from the localisation table"""
         char_skill_df = self.character_skills
         # select only entries with UE tier 2 get UE passive info
-        char_ue_skill_df = char_skill_df[(char_skill_df['MinimumGradeCharacterWeapon']==2) & (char_skill_df['SkillCategory']=='Passive')]
+        char_ue_skill_df = char_skill_df[char_skill_df.GroupId.str.contains('WeaponPassive')]#[(char_skill_df['MinimumGradeCharacterWeapon']==2) & (char_skill_df['SkillCategory']=='Passive')]
         # group by passive skill group id and get UE passive bonus
         ue_passive_df = char_ue_skill_df.groupby('CharacterId', sort=False).apply(_parse_ue_passive_stats)
         
@@ -365,20 +368,21 @@ class BAData:
             mask = names_df.filter(like='Name', axis=1).apply(lambda r: r.str.contains(substr, case=False).any(), axis=1)
             names_df = names_df[mask]
         
-        return names_df.set_index('CharacterId')[['DevName'] + lang.localize('Name')].to_dict(orient='index')
+        return names_df.set_index('CharacterId')[['DevName', 'BackupName'] + lang.localize('Name')].to_dict(orient='index')
     
-    def find_character(self, lookup_key=[], lookup_value=[], lang=Localization('en')):
+    def find_character(self, lookup_key=[], lookup_value=[], student_only=True, lang=Localization('en')):
         """Creates a Character object based on the lookup key
         
         :param lookup: Either character name or character id to look up by
         :return BACharacter: Object that holds methods to extract character information
         """
-        details_df = self.character_details
+        cd = self.character_details
+        details_df = cd[cd.IsPlayableCharacter & (cd.ProductionStep=='Release')] if student_only else cd
         
         selected_ids = []
         if not lookup_key and not lookup_value:
             # return all characters
-            selected_ids = details_df[['CharacterId'] + lang.localize('Name')].to_dict(orient='records')
+            selected_ids = details_df.CharacterId.tolist()#[['CharacterId'] + lang.localize('Name')].to_dict(orient='records')
         elif lookup_key:
             # make lookups into lists if not already
             if isinstance(lookup_key, str):
@@ -393,7 +397,7 @@ class BAData:
 
             # make mask based on filter criteria
             mask = functools.reduce(logical_and, [details_df[k].isin(v) for k,v in zip(lookup_key, lookup_value)])
-            selected_ids = details_df[mask][['CharacterId'] + lang.localize('Name')].to_dict(orient='records')
+            selected_ids = details_df[mask].CharacterId.tolist()#[['CharacterId'] + lang.localize('Name')].to_dict(orient='records')
         
         return selected_ids
     
