@@ -3,12 +3,16 @@ from badapi.reader import BAData, BACharacter
 from badapi.localization import Localization
 from badapi.encoder import NumpyEncoder
 from badapi.helper import to_possible_types
+import json
 
 app = Flask(__name__)
 app.config['JSON_SORT_KEYS'] = False
 app.json_encoder = NumpyEncoder
 
-bad = BAData()
+with open('config.json') as f:
+    configs = json.load(f)
+
+bad = BAData(configs['root_jp'], configs['root_global'])
 
 @app.route('/')
 def index():
@@ -23,8 +27,6 @@ def list_characters():
     
     return bad.list_characters(substr=contains, student_only=stonly, lang=Localization(*lang))
 
-#### IMPLEMENT FILTER BY LOOKUP KEYS USING QUERY PARAMETERS
-### for both characters and other resources
 @app.route('/characters/')
 @app.route('/characters/<int:idee>/')
 @app.route('/characters/<int:idee>/<string:resource>')
@@ -42,9 +44,10 @@ def fetch_characters(idee=None, resource=None):
     else:
         lkey.append('CharacterId')
         lvalue.append([idee])
+        stonly = False
         
     for arg, val in request.args.lists():
-        if arg=='lang':
+        if arg in ['lang', 'student_only']:
             continue
         lkey.append(arg)
         lvalue.append(list(map(to_possible_types, val)))
@@ -107,3 +110,7 @@ def fetch_resource(resource=None, idee=None):
         lvalue.append(list(map(to_possible_types, val)))
         
     return (resource_funcs[resource])(lookup_key=lkey, lookup_value=lvalue, lang=lang)
+
+
+if __name__=="__main__":
+    app.run()

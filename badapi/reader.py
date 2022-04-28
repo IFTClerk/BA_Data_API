@@ -181,6 +181,7 @@ class BAData:
         # merge with localisation table for names
         details_df = details_df.merge(localisation_df, how='left', left_on='LocalizeEtcId', right_on='Key')
         details_df = details_df.merge(backup_name_df[['Id', 'BackupName']], how='left', on='Id', suffixes=[None,'_dupe'])
+        details_df.BackupName.fillna("", inplace=True)
         
         # rename id to make joining easier
         details_df = details_df.rename(columns={"Id": "CharacterId"})
@@ -562,9 +563,10 @@ class BACharacter():
     
     def skills(self):
         try:
-            skill_df = self._master.character_skills.set_index('CharacterId')\
-                            .loc[self._id].drop_duplicates(subset=['GroupId', 'Level'])\
-                            .set_index(['GroupId', 'Level'])
+            skill_df = self._master.character_skills.set_index('CharacterId').loc[self._id]
+            if isinstance(skill_df, pd.Series):
+                skill_df = skill_df.to_frame().transpose()
+            skill_df = skill_df.drop_duplicates(subset=['GroupId', 'Level']).set_index(['GroupId', 'Level'])
         except KeyError:
             return {}
         

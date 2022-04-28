@@ -3,6 +3,9 @@ venv
 notebook
 .ipynb_checkpoints
 
+# JSON files
+*.json
+
 # Boilerplate gitignore below
 # Byte-compiled / optimized / DLL files
 __pycache__/
