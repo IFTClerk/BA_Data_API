@@ -23,9 +23,9 @@ def list_characters():
     
     stonly = request.args.get("student_only", default=True, type=lambda v: v.lower() == 'true')
     contains = request.args.get('name_contains', '')
-    lang = request.args.getlist('lang')
+    lang = Localization(*request.args.getlist('lang'))
     
-    return bad.list_characters(substr=contains, student_only=stonly, lang=Localization(*lang))
+    return bad.list_characters(substr=contains, student_only=stonly, lang=lang)
 
 @app.route('/characters/')
 @app.route('/characters/<int:idee>/')
