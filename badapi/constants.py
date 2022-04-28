@@ -166,7 +166,7 @@ action_map = {
 
 # fields to keep for individual character data
 # basic details
-basic_keep_keys = ['DevName', 'ProductionStep', 'IsPlayableCharacter',
+basic_keep_keys = ['DevName', 'BackupName', 'ProductionStep', 'IsPlayableCharacter',
                    'Rarity', 'TacticRole', 'TacticRange', 'WeaponType',
                    'BulletType', 'ArmorType', 'School', 'Club',
                    'DefaultStarGrade', 'MaxStarGrade', 'SquadType', 
