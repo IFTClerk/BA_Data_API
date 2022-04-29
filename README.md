@@ -79,5 +79,6 @@ Query Parameters:
 2. ``cd`` into the directory and run ``pip install .``
 3. ``chmod +x run.sh; ./run.sh`` to start a simple WSGI development server
 4. Visit localhost:5000 (by default) to interact with the application
-5. Find your favourite deployment option on [Flask documentation](https://flask.palletsprojects.com/en/2.1.x/deploying/)
+
+Find your favourite deployment option on [Flask documentation](https://flask.palletsprojects.com/en/2.1.x/deploying/)
 
