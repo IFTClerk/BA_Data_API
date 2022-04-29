@@ -115,8 +115,7 @@ def _get_game_data(url):
 
 
 class BAData:
-    def __init__(self, url_root="https://raw.githubusercontent.com/aizawey479/ba-data/jp/Excel/",\
-                 url_global_root="https://raw.githubusercontent.com/aizawey479/ba-data/global/Excel/"):
+    def __init__(self, url_root, url_global_root):
         """ Creates an instance of BA DataFrame by getting the required Excel tables from the repository root
         and then processing with Pandas
             
@@ -184,7 +183,8 @@ class BAData:
         details_df.BackupName.fillna("", inplace=True)
         
         # rename id to make joining easier
-        details_df = details_df.rename(columns={"Id": "CharacterId"})
+        # details_df = details_df.rename(columns={"Id": "CharacterId"})
+        details_df['CharacterId'] = details_df['Id']
         
         return details_df
     
@@ -402,18 +402,6 @@ class BAData:
         
         return selected_ids
     
-    def find_student(self, lookup_key=[], lookup_value=[], lang=Localization('en')):
-        """Creates a Character object based on the lookup key
-        Calls ``get_character`` internally
-        
-        :param lookup: Either character name or character id to look up by
-        :return BACharacter: Object that holds methods to extract character information
-        """
-        lookup_key += ['IsPlayableCharacter', 'ProductionStep']
-        lookup_value += [[True], ['Release']]
-        
-        return self.get_character(lookup_key, lookup_value, lang)
-    
     def _get_generic_asset(self, asset, lookup_key=[], lookup_value=[], keep_cols=None, localize_cols=[], lang=Localization('en'), index='Id'):
         """Gets a generic asset (item, currency, equipment, furniture) by a lookup key"""
         # combine column filters
@@ -553,7 +541,7 @@ class BACharacter():
         return summary_dict
     
     def basic_info(self):
-        return self._master.character_details.set_index('CharacterId').loc[self._id][self.lang.localize('Name') + basic_keep_keys].to_dict()
+        return self._master.character_details.set_index('CharacterId').loc[self._id][self.lang.localize('Name') + info_keep_keys].to_dict()
     
     def stats(self):
         return self._master.character_stats.set_index('CharacterId').loc[self._id].to_dict()
